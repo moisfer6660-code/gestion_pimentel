@@ -169,13 +169,12 @@ class FormularioRepresentante(ttk.LabelFrame):
         self.entry_correo.delete(0, tk.END)
         self.entry_direccion.delete(0, tk.END)
 
-class FormularioConfiguracionAcademica(ttk.LabelFrame):
+class FormularioConfiguracionAcademica(ttk.Frame):
     
-
-    """Molde reutilizable y avanzado para la configuración y creación de secciones académicas."""
+    """Molde reutilizable para la configuración de secciones con fondo institucional limpio."""
 
     def __init__(self, parent):
-        super().__init__(parent, text="Configuración de secciones y períodos ", padding=15)
+        super().__init__(parent, style="TFrame")
         self._construir_campos()
 
     def _construir_campos(self):
@@ -183,7 +182,7 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.columnconfigure(3, weight=1)
 
         # Fila 0: Período Escolar y Turno
-        ttk.Label(self, text="Período Escolar:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Período Escolar:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=0, sticky="w", pady=6, padx=5)
         self.combo_periodo = ttk.Combobox(
             self, width=22, 
             values=["2026-2027", "2027-2028", "2028-2029", "2029-2030"], 
@@ -192,7 +191,7 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.combo_periodo.grid(row=0, column=1, sticky="ew", pady=6, padx=5)
         self.combo_periodo.set("2026-2027")
 
-        ttk.Label(self, text="Turno / Jornada:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Turno / Jornada:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=2, sticky="w", pady=6, padx=5)
         self.combo_turno = ttk.Combobox(
             self, width=22, 
             values=["Mañana", "Tarde", "Integral / Completa"], 
@@ -202,7 +201,7 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.combo_turno.set("Mañana")
 
         # Fila 1: Año y Sección (A-Z)
-        ttk.Label(self, text="Año / Grado:", font=("Segoe UI", 9, "bold")).grid(row=1, column=0, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Año / Grado:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=1, column=0, sticky="w", pady=6, padx=5)
         self.combo_anio = ttk.Combobox(
             self, width=22, 
             values=["1er Año", "2do Año", "3er Año", "4to Año", "5to Año"], 
@@ -211,7 +210,7 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.combo_anio.grid(row=1, column=1, sticky="ew", pady=6, padx=5)
         self.combo_anio.set("1er Año")
 
-        ttk.Label(self, text="Sección (Letra):", font=("Segoe UI", 9, "bold")).grid(row=1, column=2, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Sección (Letra):", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=1, column=2, sticky="w", pady=6, padx=5)
         letras_az = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
         self.combo_seccion = ttk.Combobox(
             self, width=22, 
@@ -222,15 +221,14 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.combo_seccion.set("A")
 
         # Fila 2: Aula y Capacidad
-        ttk.Label(self, text="Aula / Salón:", font=("Segoe UI", 9, "bold")).grid(row=2, column=0, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Aula / Salón:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=2, column=0, sticky="w", pady=6, padx=5)
         self.datos_aula = ttk.Entry(self, width=22)
         self.datos_aula.grid(row=2, column=1, sticky="ew", pady=6, padx=5)
 
-        ttk.Label(self, text="Capacidad Máx:", font=("Segoe UI", 9, "bold")).grid(row=2, column=2, sticky="w", pady=6, padx=5)
+        ttk.Label(self, text="Capacidad Máx:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=2, column=2, sticky="w", pady=6, padx=5)
         self.datos_capacidad_seccion = ttk.Entry(self, width=22)
         self.datos_capacidad_seccion.grid(row=2, column=3, sticky="ew", pady=6, padx=5)
         self.datos_capacidad_seccion.insert(0, "35")
-        
 
     def obtener_datos(self):
         return {
@@ -250,7 +248,7 @@ class FormularioConfiguracionAcademica(ttk.LabelFrame):
         self.datos_aula.delete(0, tk.END)
         self.datos_capacidad_seccion.delete(0, tk.END)
         self.datos_capacidad_seccion.insert(0, "35")
-
+        
 class FormularioRegistroProfesor(ttk.Frame):
     """Componente reutilizable de formulario para el registro y carga de documentos de docentes."""
 
