@@ -1,183 +1,193 @@
 import copy
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 from PIL import Image, ImageTk
+import ttkbootstrap as ttk
+from ttkbootstrap.style import Style
 
 class VistaAsignacionNotas(ttk.Frame):
     
-    """Interfaz para la gestión y asignación de calificaciones escolares."""
+    """Interfaz para la gestión y asignación de calificaciones escolares con buscador integrado y diseño institucional."""
 
     def __init__(self, contenedor_principal, controlador_externo=None):
         super().__init__(contenedor_principal)
         self.controlador_externo = controlador_externo
         self.registros_celdas = {}  
         
-        # Estado inicial base
+        # Estado inicial base con más estudiantes de prueba
         self.actividades_iniciales = ["Evaluación Inicial", "Taller N°1"]
         self.datos_estudiantes_iniciales = [
             ("V-33456789", "Pérez González, Alejandro", ["15.0", "19.0"]),
             ("V-33987123", "Rodríguez Silva, María Gabriela", ["14.0", "16.0"]),
             ("V-34112233", "Gómez Blanco, Jesús David", ["11.0", "13.0"]),
             ("V-34556677", "Martínez López, Valeria Sofía", ["20.0", "19.0"]),
+            ("V-35123456", "Rojas Morales, Carlos Eduardo", ["16.0", "15.0"]),
+            ("V-35678901", "Hernández Ruiz, Ana Karina", ["18.0", "17.0"]),
+            ("V-36111222", "Torres Medina, Luis Miguel", ["12.0", "14.0"]),
+            ("V-36999888", "Blanco Pérez, Mariana Sofía", ["19.0", "18.0"]),
         ]
         
         # Copias activas de trabajo
         self.lista_actividades = copy.deepcopy(self.actividades_iniciales)
         self.estudiantes_data = copy.deepcopy(self.datos_estudiantes_iniciales)
 
-        self._configurar_estilos_ttk()
+        # Configuración de paleta institucional y fondo uniforme #F3F3E0
+        self.estilo_app = Style(theme="flatly")
+        self._configurar_estilos_institucionales()
+
         self._construir_interfaz(self)
 
-    def _configurar_estilos_ttk(self):
-        estilo_ttk = ttk.Style()
-        if "clam" in estilo_ttk.theme_names():
-            estilo_ttk.theme_use("clam")
+    def _configurar_estilos_institucionales(self):
+        """Aplica la paleta con fondo #F3F3E0 y acentos en rojo institucional sobrio."""
+        color_rojo = "#b91c1c"
+        color_rojo_hover = "#991b1b"
+        color_fondo = "#F3F3E0"
         
-        estilo_ttk.configure(".", font=("Segoe UI", 9))
-        estilo_ttk.configure("TFrame", background="#f8fafc")
+        self.estilo_app.configure("TFrame", background=color_fondo)
+        self.estilo_app.configure("TLabel", background=color_fondo)
+        self.estilo_app.configure("TLabelframe", background=color_fondo, bordercolor=color_rojo)
+        self.estilo_app.configure("TLabelframe.Label", background=color_fondo, foreground=color_rojo, font=("Segoe UI", 10, "bold"))
         
-        # Estilo para botones principales en rojo institucional
-        estilo_ttk.configure("TButton", padding=(10, 6), relief="flat", background="#b91c1c", borderwidth=0, font=("Segoe UI", 9, "bold"), foreground="#FFFFFF")
-        estilo_ttk.map("TButton", background=[("active", "#991b1b"), ("pressed", "#7f1d1d")])
-
-        # Estilo para botón Guardar (Verde armónico)
-        estilo_ttk.configure("Accent.TButton", background="#32B855", foreground="#ffffff")
-        estilo_ttk.map("Accent.TButton", background=[("active", "#289e47"), ("pressed", "#1e7835")])
-
-        # Estilo para botón Eliminar (Rojo oscuro de alerta)
-        estilo_ttk.configure("Danger.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Danger.TButton", background=[("active", "#b91c1c"), ("pressed", "#7f1d1d")])
-
-        # Estilo para botón Regresar (Gris pizarra elegante que combina con todo)
-        estilo_ttk.configure("Secondary.TButton", background="#475569", foreground="#ffffff")
-        estilo_ttk.map("Secondary.TButton", background=[("active", "#334155"), ("pressed", "#1e293b")])
-
-        # Estilo para botón Filtrar (rojo institucional coordinado con el tema general)
-        estilo_ttk.configure("Filter.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Filter.TButton", background=[("active", "#b91c1c"), ("pressed", "#7f1d1d")])
-
-        # Estilo para botón Imprimir (rojo institucional coordinado)
-        estilo_ttk.configure("Info.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Info.TButton", background=[("active", "#b91c1c"), ("pressed", "#7f1d1d")])
+        self.estilo_app.configure("TButton", background=color_rojo, foreground="#ffffff", bordercolor=color_rojo, font=("Segoe UI", 9, "bold"))
+        self.estilo_app.map("TButton", 
+            background=[("active", color_rojo_hover), ("pressed", "#7f1d1d")],
+            bordercolor=[("active", color_rojo_hover)]
+        )
 
     def _aplicar_cursor_mano(self, boton):
-        """Asigna el cambio de cursor a formato de mano interactiva al pasar por encima."""
         boton.bind("<Enter>", lambda e: self.winfo_toplevel().config(cursor="hand2"))
         boton.bind("<Leave>", lambda e: self.winfo_toplevel().config(cursor=""))
 
     def _construir_interfaz(self, contenedor):
+        color_fondo = "#F3F3E0"
         contenedor.configure(style="TFrame")
+        contenedor.columnconfigure(0, weight=1)
+        contenedor.rowconfigure(3, weight=1)
         
-        # Encabezado institucional con margen derecho protegido para el logotipo
-        marco_encabezado = ttk.Frame(contenedor, style="TFrame", height=75)
-        marco_encabezado.pack(fill="x", padx=(20, 190), pady=(10, 0))
-        marco_encabezado.pack_propagate(False)
+        # 1. Encabezado simétrico (Grid de 2 columnas)
+        marco_encabezado = ttk.Frame(contenedor, padding=(20, 10, 20, 2))
+        marco_encabezado.pack(fill="x")
+        marco_encabezado.columnconfigure(0, weight=1)
+        marco_encabezado.columnconfigure(1, weight=0)
 
-        marco_titulos = ttk.Frame(marco_encabezado, style="TFrame")
-        marco_titulos.place(x=0, y=8)
+        marco_titulos = ttk.Frame(marco_encabezado)
+        marco_titulos.grid(row=0, column=0, sticky="w")
 
         etiqueta_titulo = tk.Label(
             marco_titulos, 
             text="Control de Calificaciones", 
             font=("Segoe UI", 22, "bold"),
-            foreground="#A93226",
-            background="#f8fafc"
+            fg="#b91c1c",
+            bg=color_fondo
         )
         etiqueta_titulo.pack(anchor="w")
 
         etiqueta_subtitulo = tk.Label(
             marco_titulos, 
-            text="Planilla Institucional", 
-            font=("Segoe UI", 11, "italic"),
-            foreground="#64748b",
-            background="#f8fafc"
+            text="Planilla Institucional - Registro de Evaluaciones", 
+            font=("Segoe UI", 10, "italic"),
+            fg="#64748b",
+            bg=color_fondo
         )
         etiqueta_subtitulo.pack(anchor="w", pady=(1, 0))
 
-        # Logotipo institucional grande en la esquina superior derecha (libre de interferencias)
+        marco_logo = ttk.Frame(marco_encabezado, width=95, height=95)
+        marco_logo.grid(row=0, column=1, sticky="e", padx=(10, 0))
+        marco_logo.pack_propagate(False)
+
         try:
             ruta_logo = os.path.join(os.path.dirname(__file__), "logon.png")
             if os.path.exists(ruta_logo):
-                imagen_pil = Image.open(ruta_logo).resize((175, 175), Image.Resampling.LANCZOS)
+                imagen_pil = Image.open(ruta_logo)
+                imagen_pil.thumbnail((85, 85), Image.Resampling.LANCZOS)
                 self.imagen_logo = ImageTk.PhotoImage(imagen_pil)
-                etiqueta_logo = ttk.Label(contenedor, image=self.imagen_logo, style="TLabel", background="#f8fafc")
-                etiqueta_logo.place(relx=0.98, x=0, y=10, anchor="ne")
-                etiqueta_logo.lift()
+                
+                etiqueta_logo = tk.Label(marco_logo, image=self.imagen_logo, bg=color_fondo)
+                etiqueta_logo.pack(expand=True, anchor="center")
         except Exception as error_logo:
             print(f"No se pudo cargar el logo: {error_logo}")
 
-        # Selectores de filtros y botón de regresar con colores armónicos y margen protegido
-        selector_filtro = ttk.Frame(contenedor, padding=8, style="TFrame")
-        selector_filtro.pack(fill="x", padx=(20, 190), pady=(5, 5))
+        # 2. Bloque de Filtros de Consulta Académica y Buscador Integrado
+        selector_filtro = ttk.Labelframe(contenedor, text=" Filtros de Consulta Académica y Búsqueda ", padding=10)
+        selector_filtro.pack(fill="x", padx=20, pady=(4, 6))
+        selector_filtro.columnconfigure(7, weight=1)
 
-        tk.Label(selector_filtro, text="Año / Grado:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=0, sticky="w", pady=6, padx=5)
+        ttk.Label(selector_filtro, text="Año / Grado:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=4, padx=(5, 5))
         self.combo_anio = ttk.Combobox(
-            selector_filtro, values=["1er Año", "2do Año", "3er Año", "4to Año", "5to Año"], state="readonly", width=14
+            selector_filtro, values=["1er Año", "2do Año", "3er Año", "4to Año", "5to Año"], state="readonly", width=12
         )
-        self.combo_anio.grid(row=0, column=1, sticky="w", pady=6, padx=5)
+        self.combo_anio.grid(row=0, column=1, sticky="w", pady=4, padx=5)
         self.combo_anio.set("1er Año")
 
-        tk.Label(selector_filtro, text="Sección:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=2, sticky="w", pady=6, padx=10)
+        ttk.Label(selector_filtro, text="Sección:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", pady=4, padx=(10, 5))
         letras_az = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
         self.combo_seccion = ttk.Combobox(
-            selector_filtro, values=letras_az, state="readonly", width=6
+            selector_filtro, values=letras_az, state="readonly", width=5
         )
-        self.combo_seccion.grid(row=0, column=3, sticky="w", pady=6, padx=5)
+        self.combo_seccion.grid(row=0, column=3, sticky="w", pady=4, padx=5)
         self.combo_seccion.set("A")
 
-        tk.Label(selector_filtro, text="Materia:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=4, sticky="w", pady=6, padx=10)
+        ttk.Label(selector_filtro, text="Materia:", font=("Segoe UI", 9, "bold")).grid(row=0, column=4, sticky="w", pady=4, padx=(10, 5))
         self.combo_materia = ttk.Combobox(
             selector_filtro, 
             values=["Matemáticas", "Castellano", "Inglés", "Biología", "Física", "Química", "Geografía e Historia"], 
             state="readonly",
-            width=20
+            width=15
         )
-        self.combo_materia.grid(row=0, column=5, sticky="w", pady=6, padx=5)
+        self.combo_materia.grid(row=0, column=5, sticky="w", pady=4, padx=5)
         self.combo_materia.set("Matemáticas")
 
-        self.boton_filtrar = ttk.Button(selector_filtro, text="Filtrar", style="Filter.TButton", command=self._on_aplicar_filtro)
-        self.boton_filtrar.grid(row=0, column=6, padx=12, pady=6)
+        self.boton_filtrar = ttk.Button(selector_filtro, text="🔍 Filtrar", command=self._on_aplicar_filtro)
+        self.boton_filtrar.grid(row=0, column=6, padx=(10, 5), pady=4)
         self._aplicar_cursor_mano(self.boton_filtrar)
 
-        self.boton_regresar = ttk.Button(selector_filtro, text="← Regresar", style="Secondary.TButton", command=self._on_regresar)
-        self.boton_regresar.grid(row=0, column=7, padx=12, pady=6)
+        self.boton_regresar = ttk.Button(selector_filtro, text="← Regresar", bootstyle="secondary", command=self._on_regresar)
+        self.boton_regresar.grid(row=0, column=7, padx=(5, 5), pady=4, sticky="e")
         self._aplicar_cursor_mano(self.boton_regresar)
 
-        tk.Label(selector_filtro, text="Docente:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=1, column=0, sticky="w", pady=4, padx=5)
-        self.etiqueta_docente_valor = tk.Label(selector_filtro, text="Prof. Carlos Mendoza (Matemáticas)", font=("Segoe UI", 9, "italic"), foreground="#0284c7", background="#f8fafc")
-        self.etiqueta_docente_valor.grid(row=1, column=1, columnspan=5, sticky="w", pady=4, padx=5)
+        # Fila inferior del bloque: Docente y Buscador en tiempo real por cédula/nombre
+        ttk.Label(selector_filtro, text="Docente:", font=("Segoe UI", 9, "bold")).grid(row=1, column=0, sticky="w", pady=(6, 2), padx=(5, 5))
+        self.etiqueta_docente_valor = tk.Label(selector_filtro, text="Prof. Carlos Mendoza (Matemáticas)", font=("Segoe UI", 9, "italic"), fg="#b91c1c", bg=color_fondo)
+        self.etiqueta_docente_valor.grid(row=1, column=1, columnspan=3, sticky="w", pady=(6, 2), padx=5)
 
-        # Panel de operaciones sobre actividades y botón de imprimir con menú desplegable
-        gestion_nota = ttk.Frame(contenedor, padding=5, style="TFrame")
-        gestion_nota.pack(fill="x", padx=(20, 190), pady=(8, 10))
+        ttk.Label(selector_filtro, text="Buscar Estudiante:", font=("Segoe UI", 9, "bold")).grid(row=1, column=4, sticky="e", pady=(6, 2), padx=(10, 5))
+        
+        self.var_busqueda = tk.StringVar()
+        self.var_busqueda.trace_add("write", lambda *args: self._construir_planilla_interactiva())
+        
+        self.entrada_busqueda = ttk.Entry(selector_filtro, textvariable=self.var_busqueda, width=12)
+        self.entrada_busqueda.grid(row=1, column=5, columnspan=3, sticky="ew", pady=(6, 2), padx=5)
 
-        tk.Label(gestion_nota, text="Actividad:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=0, sticky="w", padx=(0, 5))
-        self.entrada_nueva_actividad = ttk.Entry(gestion_nota, width=16)
+        # 3. Panel de Gestión de Actividades y Acciones
+        gestion_nota = ttk.Labelframe(contenedor, text=" Gestión de Actividades y Acciones ", padding=10)
+        gestion_nota.pack(fill="x", padx=20, pady=(4, 6))
+
+        ttk.Label(gestion_nota, text="Actividad:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=(0, 8))
+        self.entrada_nueva_actividad = ttk.Entry(gestion_nota, width=20)
         self.entrada_nueva_actividad.grid(row=0, column=1, sticky="ew", padx=5)
         self.entrada_nueva_actividad.insert(0, "Examen Parcial N°1")
 
-        self.boton_crear_actividad = ttk.Button(gestion_nota, text="Agregar", command=self._on_crear_actividad_global)
-        self.boton_crear_actividad.grid(row=0, column=2, padx=3)
+        self.boton_crear_actividad = ttk.Button(gestion_nota, text="➕ Agregar", command=self._on_crear_actividad_global)
+        self.boton_crear_actividad.grid(row=0, column=2, padx=6)
         self._aplicar_cursor_mano(self.boton_crear_actividad)
 
-        self.boton_renombrar_actividad = ttk.Button(gestion_nota, text="Renombrar", command=self._on_renombrar_actividad)
-        self.boton_renombrar_actividad.grid(row=0, column=3, padx=3)
+        self.boton_renombrar_actividad = ttk.Button(gestion_nota, text="Renombrar", bootstyle="secondary", command=self._on_renombrar_actividad)
+        self.boton_renombrar_actividad.grid(row=0, column=3, padx=6)
         self._aplicar_cursor_mano(self.boton_renombrar_actividad)
 
-        self.boton_eliminar_actividad = ttk.Button(gestion_nota, text="Eliminar", command=self._on_eliminar_actividad, style="Danger.TButton")
-        self.boton_eliminar_actividad.grid(row=0, column=4, padx=3)
+        self.boton_eliminar_actividad = ttk.Button(gestion_nota, text="Eliminar", command=self._on_eliminar_actividad)
+        self.boton_eliminar_actividad.grid(row=0, column=4, padx=6)
         self._aplicar_cursor_mano(self.boton_eliminar_actividad)
 
-        self.boton_deshacer = ttk.Button(gestion_nota, text="Deshacer", command=self._on_deshacer_cambios)
-        self.boton_deshacer.grid(row=0, column=5, padx=3)
+        self.boton_deshacer = ttk.Button(gestion_nota, text="Deshacer", bootstyle="secondary", command=self._on_deshacer_cambios)
+        self.boton_deshacer.grid(row=0, column=5, padx=6)
         self._aplicar_cursor_mano(self.boton_deshacer)
 
-        self.boton_guardar_bd = ttk.Button(gestion_nota, text="Guardar", command=self._on_guardar_en_bd, style="Accent.TButton")
-        self.boton_guardar_bd.grid(row=0, column=6, padx=3)
+        self.boton_guardar_bd = ttk.Button(gestion_nota, text="Guardar", command=self._on_guardar_en_bd)
+        self.boton_guardar_bd.grid(row=0, column=6, padx=6)
         self._aplicar_cursor_mano(self.boton_guardar_bd)
 
-        # Menú desplegable para el botón de Imprimir
         self.menu_imprimir = tk.Menu(contenedor, tearoff=0)
         self.menu_imprimir.add_command(label="🖨️ Imprimir Planilla Vacía", command=self._on_exportar_planilla_blanca)
         self.menu_imprimir.add_command(label="📊 Imprimir Planilla con Notas", command=self._on_exportar_planilla_notas)
@@ -188,21 +198,21 @@ class VistaAsignacionNotas(ttk.Frame):
             finally:
                 self.menu_imprimir.grab_release()
 
-        self.boton_imprimir_opciones = ttk.Button(gestion_nota, text="🖨️ Imprimir ▼", style="Info.TButton")
-        self.boton_imprimir_opciones.grid(row=0, column=7, padx=3)
+        self.boton_imprimir_opciones = ttk.Button(gestion_nota, text="🖨️ Imprimir ▼")
+        self.boton_imprimir_opciones.grid(row=0, column=7, padx=6)
         self.boton_imprimir_opciones.bind("<Button-1>", desplegar_menu_imprimir)
         self._aplicar_cursor_mano(self.boton_imprimir_opciones)
 
-        # Contenedor principal de la tabla
-        frame_tabla = ttk.Frame(contenedor, style="TFrame")
-        frame_tabla.pack(fill="both", expand=True, padx=20, pady=(5, 15))
+        # 4. Contenedor principal de la tabla de calificaciones
+        frame_tabla = ttk.Labelframe(contenedor, text=" Planilla de Calificaciones ", padding=10)
+        frame_tabla.pack(fill="both", expand=True, padx=20, pady=(4, 15))
         frame_tabla.columnconfigure(0, weight=1)
         frame_tabla.rowconfigure(0, weight=1)
 
-        self.lienzo_tabla = tk.Canvas(frame_tabla, bg="#ffffff", highlightthickness=0)
+        self.lienzo_tabla = tk.Canvas(frame_tabla, bg=color_fondo, highlightthickness=0)
         self.barra_desplazamiento_y = ttk.Scrollbar(frame_tabla, orient="vertical", command=self.lienzo_tabla.yview)
         
-        self.marco_desplazamiento = ttk.Frame(self.lienzo_tabla, style="TFrame")
+        self.marco_desplazamiento = ttk.Frame(self.lienzo_tabla)
         self.marco_desplazamiento.bind(
             "<Configure>",
             lambda evento: self.lienzo_tabla.configure(scrollregion=self.lienzo_tabla.bbox("all"))
@@ -217,14 +227,14 @@ class VistaAsignacionNotas(ttk.Frame):
         self._construir_planilla_interactiva()
 
     def _crear_campo_seleccionable(self, contenedor, texto, ancho, color_fondo, justificacion="center", estilo_fuente=("Segoe UI", 9)):
-        """Crea un campo plano de solo lectura que permite seleccionar y copiar texto."""
+        """Crea un campo plano de solo lectura con letras en negro puro (#000000)."""
         var_texto = tk.StringVar(value=texto)
         campo = tk.Entry(
             contenedor,
             textvariable=var_texto,
             font=estilo_fuente,
             bg=color_fondo,
-            fg="#1e293b",
+            fg="#000000",
             relief="flat",
             justify=justificacion,
             state="readonly",
@@ -247,48 +257,53 @@ class VistaAsignacionNotas(ttk.Frame):
                 self.marco_desplazamiento, 
                 text=texto_columna, 
                 font=("Segoe UI", 9, "bold"),
-                bg="#e2e8f0", 
-                fg="#01112c", 
+                bg="#7f1d1d", 
+                fg="#ffffff", 
                 relief="flat", 
                 padx=10, 
-                pady=8, 
+                pady=6, 
                 anchor="center" if columna_idx != 2 else "w"
             )
             etiqueta_cabecera.grid(row=0, column=columna_idx, sticky="nsew", padx=1, pady=1)
 
-        total_filas = len(self.estudiantes_data)
+        # Filtrar estudiantes en tiempo real según el texto escrito en el buscador
+        texto_busqueda = self.var_busqueda.get().strip().lower()
+        
+        estudiantes_filtrados = []
+        for cedula, nombre, notas in self.estudiantes_data:
+            if texto_busqueda in cedula.lower() or texto_busqueda in nombre.lower():
+                estudiantes_filtrados.append((cedula, nombre, notas))
 
-        for indice_fila, (cedula_estudiante, nombre_estudiante, lista_notas) in enumerate(self.estudiantes_data, start=1):
+        total_filas = len(estudiantes_filtrados)
+
+        for indice_fila, (cedula_estudiante, nombre_estudiante, lista_notas) in enumerate(estudiantes_filtrados, start=1):
             while len(lista_notas) < len(self.lista_actividades):
                 lista_notas.append("0.0")
             if len(lista_notas) > len(self.lista_actividades):
                 lista_notas = lista_notas[:len(self.lista_actividades)]
-                self.estudiantes_data[indice_fila - 1] = (cedula_estudiante, nombre_estudiante, lista_notas)
 
-            color_fondo_fila = "#ffffff" if indice_fila % 2 != 0 else "#f8fafc"
+            color_fondo_fila = "#ffffff" if indice_fila % 2 != 0 else "#eae6d9"
 
-            # Celdas de datos con selección habilitada para copiar
             campo_num = self._crear_campo_seleccionable(self.marco_desplazamiento, str(indice_fila), 5, color_fondo_fila)
-            campo_num.grid(row=indice_fila, column=0, sticky="nsew", padx=1, pady=1, ipady=4)
+            campo_num.grid(row=indice_fila, column=0, sticky="nsew", padx=1, pady=1, ipady=2)
 
-            campo_cedula = self._crear_campo_seleccionable(self.marco_desplazamiento, cedula_estudiante, 16, color_fondo_fila, estilo_fuente=("Segoe UI", 10))
-            campo_cedula.grid(row=indice_fila, column=1, sticky="nsew", padx=1, pady=1, ipady=4)
+            campo_cedula = self._crear_campo_seleccionable(self.marco_desplazamiento, cedula_estudiante, 16, color_fondo_fila, estilo_fuente=("Segoe UI", 9, "bold"))
+            campo_cedula.grid(row=indice_fila, column=1, sticky="nsew", padx=1, pady=1, ipady=2)
 
             campo_nombre = self._crear_campo_seleccionable(self.marco_desplazamiento, nombre_estudiante, 48, color_fondo_fila, justificacion="left")
-            campo_nombre.grid(row=indice_fila, column=2, sticky="nsew", padx=1, pady=1, ipady=4)
+            campo_nombre.grid(row=indice_fila, column=2, sticky="nsew", padx=1, pady=1, ipady=2)
 
-            # Entradas de notas editables
             variables_fila = []
             entradas_fila = []
             for act_idx, valor_nota in enumerate(lista_notas):
                 variable_nota = tk.StringVar(value=valor_nota)
                 entrada_nota = ttk.Entry(self.marco_desplazamiento, textvariable=variable_nota, width=10, justify="center")
-                entrada_nota.grid(row=indice_fila, column=3 + act_idx, padx=4, pady=4)
+                entrada_nota.grid(row=indice_fila, column=3 + act_idx, padx=4, pady=2)
                 variables_fila.append(variable_nota)
                 entradas_fila.append(entrada_nota)
 
             columna_promedio_indice = 3 + len(self.lista_actividades)
-            etiqueta_promedio = tk.Label(self.marco_desplazamiento, text="0.0", font=("Segoe UI", 9, "bold"), fg="#15803d", bg=color_fondo_fila, relief="flat", anchor="center", padx=8, pady=6)
+            etiqueta_promedio = tk.Label(self.marco_desplazamiento, text="0.0", font=("Segoe UI", 9, "bold"), fg="#166534", bg=color_fondo_fila, relief="flat", anchor="center", padx=8, pady=4)
             etiqueta_promedio.grid(row=indice_fila, column=columna_promedio_indice, sticky="nsew", padx=1, pady=1)
 
             self.registros_celdas[indice_fila] = {
@@ -302,7 +317,6 @@ class VistaAsignacionNotas(ttk.Frame):
 
             self._recalcular_promedio(indice_fila)
 
-        # Configuración de navegación por teclado (Enter para bajar entre filas)
         for fila_idx in range(1, total_filas + 1):
             actividades_en_fila = self.registros_celdas[fila_idx]["entradas"]
             for act_idx, entrada_actual in enumerate(actividades_en_fila):
@@ -333,14 +347,12 @@ class VistaAsignacionNotas(ttk.Frame):
             datos_fila["etiqueta_promedio"].config(text="Inválido")
 
     def _on_regresar(self):
-        """Acción al presionar el botón Regresar."""
         if self.controlador_externo and hasattr(self.controlador_externo, "regresar_menu_principal"):
             self.controlador_externo.regresar_menu_principal()
         else:
             messagebox.showinfo("Navegación", "Regresando al menú principal...")
 
     def _on_aplicar_filtro(self):
-        """Aplica la búsqueda basada en la materia, año y sección seleccionados."""
         materia_seleccionada = self.combo_materia.get()
         anio_seleccionado = self.combo_anio.get()
         seccion_seleccionada = self.combo_seccion.get()
@@ -376,13 +388,13 @@ class VistaAsignacionNotas(ttk.Frame):
         ventana_emergente.resizable(False, False)
         ventana_emergente.grab_set()
 
-        tk.Label(ventana_emergente, text="Seleccione la actividad a renombrar:", font=("Segoe UI", 9, "bold")).pack(pady=(12, 5), padx=12, anchor="w")
+        ttk.Label(ventana_emergente, text="Seleccione la actividad a renombrar:", font=("Segoe UI", 9, "bold")).pack(pady=(12, 5), padx=12, anchor="w")
         
         combo_actividades = ttk.Combobox(ventana_emergente, values=self.lista_actividades, state="readonly", width=28)
         combo_actividades.pack(padx=12, pady=5)
         combo_actividades.set(self.lista_actividades[0])
 
-        tk.Label(ventana_emergente, text="Nuevo nombre de la actividad:").pack(pady=(5, 2), padx=12, anchor="w")
+        ttk.Label(ventana_emergente, text="Nuevo nombre de la actividad:").pack(pady=(5, 2), padx=12, anchor="w")
         entrada_nuevo_nombre = ttk.Entry(ventana_emergente, width=30)
         entrada_nuevo_nombre.pack(padx=12, anchor="w")
 
@@ -402,7 +414,7 @@ class VistaAsignacionNotas(ttk.Frame):
             ventana_emergente.destroy()
             messagebox.showinfo("Éxito", f"Actividad renombrada a '{nombre_nuevo}'.")
 
-        btn_guardar = ttk.Button(ventana_emergente, text="Guardar Cambios", command=aplicar_renombrado, style="Accent.TButton")
+        btn_guardar = ttk.Button(ventana_emergente, text="Guardar Cambios", command=aplicar_renombrado)
         btn_guardar.pack(pady=15)
         self._aplicar_cursor_mano(btn_guardar)
 
@@ -417,7 +429,7 @@ class VistaAsignacionNotas(ttk.Frame):
         ventana_emergente.resizable(False, False)
         ventana_emergente.grab_set()
 
-        tk.Label(ventana_emergente, text="Seleccione la actividad a eliminar:", font=("Segoe UI", 9, "bold")).pack(pady=(12, 2), padx=12, anchor="w")
+        ttk.Label(ventana_emergente, text="Seleccione la actividad a eliminar:", font=("Segoe UI", 9, "bold")).pack(pady=(12, 2), padx=12, anchor="w")
         
         combo_actividades = ttk.Combobox(ventana_emergente, values=self.lista_actividades, state="readonly", width=30)
         combo_actividades.pack(padx=12, pady=4)
@@ -427,7 +439,7 @@ class VistaAsignacionNotas(ttk.Frame):
             ventana_emergente, 
             text="ADVERTENCIA: Si borra esta actividad,\nse eliminarán todas las notas cargadas.", 
             font=("Segoe UI", 8, "bold"),
-            foreground="#b91c1c"
+            fg="#b91c1c"
         )
         etiqueta_advertencia.pack(pady=6, padx=12, anchor="w")
 
@@ -449,7 +461,7 @@ class VistaAsignacionNotas(ttk.Frame):
                 ventana_emergente.destroy()
                 messagebox.showinfo("Eliminado", f"La actividad '{actividad_seleccionada}' y sus notas fueron eliminadas.")
 
-        btn_borrar = ttk.Button(ventana_emergente, text="Sí, Eliminar Actividad", command=confirmar_eliminacion, style="Danger.TButton")
+        btn_borrar = ttk.Button(ventana_emergente, text="Sí, Eliminar Actividad", command=confirmar_eliminacion)
         btn_borrar.pack(pady=10)
         self._aplicar_cursor_mano(btn_borrar)
 
@@ -504,11 +516,10 @@ class VistaAsignacionNotas(ttk.Frame):
             )
 
 if __name__ == "__main__":
-    raiz_aplicacion = tk.Tk()  
-    raiz_aplicacion.title("Gestión Académica 2026 - Asignación de Notas")
-    raiz_aplicacion.geometry("1220x720")
+    raiz_aplicacion = ttk.Window(title="Gestión Académica 2026 - Asignación de Notas", themename="flatly", size=(600, 500))
+    raiz_aplicacion.configure(bg="#F3F3E0")
     
     app = VistaAsignacionNotas(contenedor_principal=raiz_aplicacion, controlador_externo=None)
-    app.pack(fill="both", expand=True)
+    app.pack(fill="both", expand=True, padx=10, pady=10)
         
     raiz_aplicacion.mainloop()

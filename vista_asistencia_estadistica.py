@@ -1,7 +1,10 @@
 import os
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
+from PIL import Image, ImageTk
+import ttkbootstrap as ttk
+from ttkbootstrap.style import Style
 
 # Intentamos importar tkcalendar para el selector gráfico interactivo de fechas
 try:
@@ -11,35 +14,35 @@ except ImportError:
     EXISTS_TKCALENDAR = False
 
 class VistaAsistenciaEstadistica(ttk.Frame):
-    """Módulo profesional de consulta, auditoría y estadísticas de asistencia escolar."""
+    """Módulo profesional de consulta, auditoría y estadísticas de asistencia escolar con diseño institucional unificado."""
 
     def __init__(self, contenedor_principal, controlador_externo=None):
         super().__init__(contenedor_principal)
         self.controlador_externo = controlador_externo
-        self._configurar_estilos_ttk()
+        
+        # Configuración del tema y paleta institucional unificada
+        self.estilo_app = Style(theme="flatly")
+        self._configurar_estilos_institucionales()
         self._construir_interfaz(self)
 
-    def _configurar_estilos_ttk(self):
-        estilo_ttk = ttk.Style()
-        if "clam" in estilo_ttk.theme_names():
-            estilo_ttk.theme_use("clam")
+    def _configurar_estilos_institucionales(self):
+        """Aplica la paleta con fondo #F3F3E0 y acentos en rojo institucional (#b91c1c)."""
+        color_rojo = "#b91c1c"
+        color_rojo_hover = "#991b1b"
+        color_fondo = "#F3F3E0"
         
-        estilo_ttk.configure(".", font=("Segoe UI", 9))
-        estilo_ttk.configure("TFrame", background="#f8fafc")
-        estilo_ttk.configure("TLabelframe", background="#f8fafc", bordercolor="#cbd5e1")
-        estilo_ttk.configure("TLabelframe.Label", background="#f8fafc", foreground="#1e293b", font=("Segoe UI", 9, "bold"))
+        # Estilos globales para eliminar fondos blancos o grises
+        self.estilo_app.configure("TFrame", background=color_fondo)
+        self.estilo_app.configure("TLabel", background=color_fondo)
+        self.estilo_app.configure("TLabelframe", background=color_fondo, bordercolor=color_rojo)
+        self.estilo_app.configure("TLabelframe.Label", background=color_fondo, foreground=color_rojo, font=("Segoe UI", 10, "bold"))
         
-        # Botones unificados con el rojo institucional principal
-        estilo_ttk.configure("TButton", padding=(10, 6), relief="flat", background="#b91c1c", borderwidth=0, font=("Segoe UI", 9, "bold"), foreground="#FFFFFF")
-        estilo_ttk.map("TButton", background=[("active", "#991b1b"), ("pressed", "#7f1d1d")])
-
-        # Botón secundario / Regresar - Gris pizarra elegante
-        estilo_ttk.configure("Secondary.TButton", background="#475569", foreground="#ffffff")
-        estilo_ttk.map("Secondary.TButton", background=[("active", "#334155"), ("pressed", "#1e293b")])
-
-        # Botón informativo / Gráficas - Azul acero institucional
-        estilo_ttk.configure("Info.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Info.TButton", background=[("active", "#991b1b"), ("pressed", "#7f1d1d")])
+        # Botones unificados con profundidad y estética profesional
+        self.estilo_app.configure("TButton", background=color_rojo, foreground="#ffffff", bordercolor=color_rojo, font=("Segoe UI", 9, "bold"))
+        self.estilo_app.map("TButton", 
+            background=[("active", color_rojo_hover), ("pressed", "#7f1d1d")],
+            bordercolor=[("active", color_rojo_hover)]
+        )
 
     def _aplicar_cursor_mano(self, boton):
         """Asigna el cambio de cursor a formato de mano interactiva al pasar por encima."""
@@ -47,64 +50,83 @@ class VistaAsistenciaEstadistica(ttk.Frame):
         boton.bind("<Leave>", lambda e: self.winfo_toplevel().config(cursor=""))
 
     def _construir_interfaz(self, contenedor):
+        color_fondo = "#F3F3E0"
         contenedor.configure(style="TFrame")
         contenedor.columnconfigure(0, weight=1)
         contenedor.rowconfigure(3, weight=1)
 
-        # Encabezado institucional limpio
-        encabezado = ttk.Frame(contenedor, style="TFrame", height=80)
-        encabezado.grid(row=0, column=0, sticky="ew", padx=20, pady=(15, 5))
-        encabezado.columnconfigure(0, weight=1)
+        # 1. Encabezado simétrico con Grid de 2 columnas (Títulos a la izquierda, Logo a la derecha)
+        marco_encabezado = ttk.Frame(contenedor, padding=(20, 15, 20, 5))
+        marco_encabezado.grid(row=0, column=0, sticky="ew")
+        marco_encabezado.columnconfigure(0, weight=1)
+        marco_encabezado.columnconfigure(1, weight=0)
 
-        frame_titulos = ttk.Frame(encabezado, style="TFrame")
-        frame_titulos.pack(side="left", anchor="w")
+        marco_titulos = ttk.Frame(marco_encabezado)
+        marco_titulos.grid(row=0, column=0, sticky="w")
 
         etiqueta_titulo = tk.Label(
-            frame_titulos, 
+            marco_titulos, 
             text="Control y Estadísticas de Asistencia", 
             font=("Segoe UI", 22, "bold"),
-            foreground="#A93226",
-            background="#f8fafc"
+            fg="#b91c1c",
+            bg=color_fondo
         )
         etiqueta_titulo.pack(anchor="w")
 
         etiqueta_subtitulo = tk.Label(
-            frame_titulos, 
+            marco_titulos, 
             text="Módulo profesional de consulta, auditoría y estadísticas escolares", 
-            font=("Segoe UI", 11, "italic"),
-            foreground="#64748b",
-            background="#f8fafc"
+            font=("Segoe UI", 10, "italic"),
+            fg="#64748b",
+            bg=color_fondo
         )
         etiqueta_subtitulo.pack(anchor="w", pady=(1, 0))
 
+        # Marco flotante protegido para el logotipo institucional
+        marco_logo = ttk.Frame(marco_encabezado, width=110, height=110)
+        marco_logo.grid(row=0, column=1, sticky="e", padx=(10, 0))
+        marco_logo.pack_propagate(False)
+
+        try:
+            ruta_logo = os.path.join(os.path.dirname(__file__), "logon.png")
+            if os.path.exists(ruta_logo):
+                imagen_pil = Image.open(ruta_logo)
+                imagen_pil.thumbnail((100, 100), Image.Resampling.LANCZOS)
+                self.imagen_logo = ImageTk.PhotoImage(imagen_pil)
+                
+                etiqueta_logo = tk.Label(marco_logo, image=self.imagen_logo, bg=color_fondo)
+                etiqueta_logo.pack(expand=True, anchor="center")
+        except Exception as error_logo:
+            print(f"No se pudo cargar el logo: {error_logo}")
+
         # ==========================================
-        # 1. PANEL DE FILTRADO (AÑO, SECCIÓN, CÁTEDRA, FECHAS)
+        # 2. PANEL DE FILTRADO (AÑO, SECCIÓN, CÁTEDRA, FECHAS)
         # ==========================================
-        panel_filtros = ttk.LabelFrame(contenedor, text=" Panel de Control y Filtros Académicos ", padding=15, style="TLabelframe")
-        panel_filtros.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 10))
+        panel_filtros = ttk.LabelFrame(contenedor, text=" Panel de Control y Filtros Académicos ", padding=12)
+        panel_filtros.grid(row=1, column=0, sticky="ew", padx=20, pady=(4, 8))
         panel_filtros.columnconfigure(1, weight=1)
         panel_filtros.columnconfigure(3, weight=1)
         panel_filtros.columnconfigure(5, weight=1)
 
         # Fila 0: Año, Sección y Cátedra
-        ttk.Label(panel_filtros, text="Año Escolar:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=0, sticky="w", padx=5, pady=6)
+        ttk.Label(panel_filtros, text="Año Escolar:", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", padx=5, pady=6)
         self.combo_ano = ttk.Combobox(panel_filtros, values=["1er Año", "2do Año", "3er Año", "4to Año", "5to Año"], state="readonly", width=14)
         self.combo_ano.grid(row=0, column=1, sticky="ew", padx=5, pady=6)
         self.combo_ano.set("1er Año")
         self.combo_ano.bind("<<ComboboxSelected>>", self._actualizar_materias)
 
-        ttk.Label(panel_filtros, text="Sección:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=2, sticky="w", padx=(15, 5), pady=6)
+        ttk.Label(panel_filtros, text="Sección:", font=("Segoe UI", 9, "bold")).grid(row=0, column=2, sticky="w", padx=(15, 5), pady=6)
         self.combo_seccion = ttk.Combobox(panel_filtros, values=["Sección A", "Sección B", "Sección Única"], state="readonly", width=14)
         self.combo_seccion.grid(row=0, column=3, sticky="ew", padx=5, pady=6)
         self.combo_seccion.set("Sección A")
 
-        ttk.Label(panel_filtros, text="Cátedra:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=0, column=4, sticky="w", padx=(15, 5), pady=6)
+        ttk.Label(panel_filtros, text="Cátedra:", font=("Segoe UI", 9, "bold")).grid(row=0, column=4, sticky="w", padx=(15, 5), pady=6)
         self.combo_materia = ttk.Combobox(panel_filtros, values=["Matemáticas I", "Castellano y Literatura", "Inglés", "Educación Física"], state="readonly", width=18)
         self.combo_materia.grid(row=0, column=5, sticky="ew", padx=5, pady=6)
         self.combo_materia.set("Matemáticas I")
 
         # Fila 1: Rango de Fechas y Botones de Consulta
-        ttk.Label(panel_filtros, text="Desde:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=1, column=0, sticky="w", padx=5, pady=6)
+        ttk.Label(panel_filtros, text="Desde:", font=("Segoe UI", 9, "bold")).grid(row=1, column=0, sticky="w", padx=5, pady=6)
         if EXISTS_TKCALENDAR:
             self.entry_desde = DateEntry(panel_filtros, width=12, background='#1f2937', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy', cursor="hand2", locale="es_VE")
             self.entry_desde.set_date("01/10/2026")
@@ -113,7 +135,7 @@ class VistaAsistenciaEstadistica(ttk.Frame):
             self.entry_desde.insert(0, "01/10/2026")
         self.entry_desde.grid(row=1, column=1, sticky="ew", padx=5, pady=6)
 
-        ttk.Label(panel_filtros, text="Hasta:", font=("Segoe UI", 9, "bold"), background="#f8fafc").grid(row=1, column=2, sticky="w", padx=(15, 5), pady=6)
+        ttk.Label(panel_filtros, text="Hasta:", font=("Segoe UI", 9, "bold")).grid(row=1, column=2, sticky="w", padx=(15, 5), pady=6)
         if EXISTS_TKCALENDAR:
             self.entry_hasta = DateEntry(panel_filtros, width=12, background='#1f2937', foreground='white', borderwidth=2, date_pattern='dd/mm/yyyy', cursor="hand2", locale="es_VE")
             self.entry_hasta.set_date(datetime.now())
@@ -122,56 +144,56 @@ class VistaAsistenciaEstadistica(ttk.Frame):
             self.entry_hasta.insert(0, datetime.now().strftime("%d/%m/%Y"))
         self.entry_hasta.grid(row=1, column=3, sticky="ew", padx=5, pady=6)
 
-        # Botones de Acción principales con estilo rojo institucional
-        acciones_frame = ttk.Frame(panel_filtros, style="TFrame")
+        # Botones de Acción principales
+        acciones_frame = ttk.Frame(panel_filtros)
         acciones_frame.grid(row=1, column=4, columnspan=2, sticky="e", pady=6)
 
         self.btn_consultar = ttk.Button(acciones_frame, text="🔍 Ejecutar Consulta", command=self._on_consultar)
         self.btn_consultar.pack(side="left", padx=4)
         self._aplicar_cursor_mano(self.btn_consultar)
 
-        self.btn_volver = ttk.Button(acciones_frame, text="↩ Volver al Menú", style="Secondary.TButton", command=self._on_volver)
+        self.btn_volver = ttk.Button(acciones_frame, text="↩ Volver", bootstyle="secondary", command=self._on_volver)
         self.btn_volver.pack(side="left", padx=4)
         self._aplicar_cursor_mano(self.btn_volver)
 
         # ==========================================
-        # 2. TARJETAS DE RESULTADOS ESTADÍSTICOS
+        # 3. TARJETAS DE RESULTADOS ESTADÍSTICOS
         # ==========================================
-        resultados_frame = ttk.LabelFrame(contenedor, text=" Resumen Analítico e Indicadores de Asistencia ", padding=12, style="TLabelframe")
-        resultados_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 10))
+        resultados_frame = ttk.LabelFrame(contenedor, text=" Resumen Analítico e Indicadores de Asistencia ", padding=12)
+        resultados_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 8))
         resultados_frame.columnconfigure((0, 1, 2, 3, 4), weight=1)
 
-        self.card_total = ttk.Label(resultados_frame, text="Matrícula Activa: 32", font=("Segoe UI", 9), background="#f8fafc")
+        self.card_total = tk.Label(resultados_frame, text="Matrícula Activa: 32", font=("Segoe UI", 9), fg="#1e293b", bg=color_fondo)
         self.card_total.grid(row=0, column=0, padx=5)
 
-        self.card_asistio = ttk.Label(resultados_frame, text="Asistencias: 29 (90.6%)", font=("Segoe UI", 10, "bold"), foreground="#27AE60", background="#f8fafc")
+        self.card_asistio = tk.Label(resultados_frame, text="Asistencias: 29 (90.6%)", font=("Segoe UI", 10, "bold"), fg="#166534", bg=color_fondo)
         self.card_asistio.grid(row=0, column=1, padx=5)
 
-        self.card_falto = ttk.Label(resultados_frame, text="Inasistencias: 3 (9.4%)", font=("Segoe UI", 10, "bold"), foreground="#C0392B", background="#f8fafc")
+        self.card_falto = tk.Label(resultados_frame, text="Inasistencias: 3 (9.4%)", font=("Segoe UI", 10, "bold"), fg="#b91c1c", bg=color_fondo)
         self.card_falto.grid(row=0, column=2, padx=5)
 
-        self.card_estatus = ttk.Label(resultados_frame, text="Estatus Cátedra: Óptimo", font=("Segoe UI", 10, "bold"), foreground="#2980B9", background="#f8fafc")
+        self.card_estatus = tk.Label(resultados_frame, text="Estatus Cátedra: Óptimo", font=("Segoe UI", 10, "bold"), fg="#0369a1", bg=color_fondo)
         self.card_estatus.grid(row=0, column=3, padx=5)
 
-        self.btn_grafico = ttk.Button(resultados_frame, text="Ver Gráfica Detallada", style="Info.TButton", command=self._mostrar_reporte_grafico)
+        self.btn_grafico = ttk.Button(resultados_frame, text="Ver Gráfica Detallada", command=self._mostrar_reporte_grafico)
         self.btn_grafico.grid(row=0, column=4, padx=5, sticky="ew")
         self._aplicar_cursor_mano(self.btn_grafico)
 
         # ==========================================
-        # 3. TABLA DE AUDITORÍA Y BÚSQUEDA DE ESTUDIANTES
+        # 4. TABLA DE AUDITORÍA Y BÚSQUEDA DE ESTUDIANTES
         # ==========================================
-        detalle_container = ttk.LabelFrame(contenedor, text=" Historial de Registros Guardados (Modo Solo Lectura - Auditoría) ", padding=12, style="TLabelframe")
+        detalle_container = ttk.LabelFrame(contenedor, text=" Historial de Registros Guardados (Modo Solo Lectura - Auditoría) ", padding=12)
         detalle_container.grid(row=3, column=0, sticky="nsew", padx=20, pady=(0, 15))
         detalle_container.columnconfigure(0, weight=1)
         detalle_container.rowconfigure(1, weight=1)
 
-        # Apartado de búsqueda de estudiante ubicado exactamente arriba de la lista/tabla de resultados
-        barra_busqueda_frame = ttk.Frame(detalle_container, style="TFrame")
+        # Apartado de búsqueda de estudiante
+        barra_busqueda_frame = ttk.Frame(detalle_container)
         barra_busqueda_frame.grid(row=0, column=0, sticky="ew", pady=(0, 8))
         
-        ttk.Label(barra_busqueda_frame, text="Buscar Estudiante :", font=("Segoe UI", 9, "bold"), background="#f8fafc").pack(side="left", padx=(0, 8))
+        ttk.Label(barra_busqueda_frame, text="Buscar Estudiante :", font=("Segoe UI", 9, "bold")).pack(side="left", padx=(0, 8))
         
-        self.entrada_buscar_estudiante = ttk.Entry(barra_busqueda_frame, width=35)
+        self.entrada_buscar_estudiante = ttk.Entry(barra_busqueda_frame, width=32)
         self.entrada_buscar_estudiante.pack(side="left", padx=4)
         self.entrada_buscar_estudiante.insert(0, "Escriba nombre o cédula...")
         
@@ -255,9 +277,9 @@ class VistaAsistenciaEstadistica(ttk.Frame):
             messagebox.showinfo("Navegación", "Saliendo del módulo de estadísticas...")      
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.title("L.N. Evelia A. de Pimentel - Módulo de Auditoría y Estadísticas")
-    root.geometry("900x700")
+    root = ttk.Window(title="L.N. Evelia A. de Pimentel - Módulo de Auditoría y Estadísticas", themename="flatly", size=(950, 720))
+    root.configure(bg="#F3F3E0")
+    
     app = VistaAsistenciaEstadistica(contenedor_principal=root, controlador_externo=None)
-    app.pack(fill="both", expand=True)
+    app.pack(fill="both", expand=True, padx=10, pady=10)
     root.mainloop()

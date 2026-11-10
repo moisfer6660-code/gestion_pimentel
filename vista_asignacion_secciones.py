@@ -1,43 +1,42 @@
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 from PIL import Image, ImageTk
+import ttkbootstrap as ttk
+from ttkbootstrap.style import Style
 from componentes import FormularioConfiguracionAcademica
 
 class VistaAsignacionSecciones(ttk.Frame):
     
-    """Vista principal para la asignación y creación de secciones por año y período."""
+    """Vista principal para la asignación y creación de secciones con diseño institucional unificado #F3F3E0."""
     
     def __init__(self, contenedor_principal, controlador_externo=None):
         super().__init__(contenedor_principal)
         self.controlador_externo = controlador_externo
-        self._configurar_estilos_ttk()
+        
+        # Configuración del tema y paleta institucional unificada
+        self.estilo_app = Style(theme="flatly")
+        self._configurar_estilos_institucionales()
         self._construir_interfaz(self)
 
-    def _configurar_estilos_ttk(self):
-        estilo_ttk = ttk.Style()
-        if "clam" in estilo_ttk.theme_names():
-            estilo_ttk.theme_use("clam")
+    def _configurar_estilos_institucionales(self):
+        """Aplica la paleta con fondo #F3F3E0 y acentos en rojo institucional (#b91c1c)."""
+        color_rojo = "#b91c1c"
+        color_rojo_hover = "#991b1b"
+        color_fondo = "#F3F3E0"
         
-        estilo_ttk.configure(".", font=("Segoe UI", 9))
+        # Estilos globales para eliminar fondos blancos o grises
+        self.estilo_app.configure("TFrame", background=color_fondo)
+        self.estilo_app.configure("TLabel", background=color_fondo)
+        self.estilo_app.configure("TLabelframe", background=color_fondo, bordercolor=color_rojo)
+        self.estilo_app.configure("TLabelframe.Label", background=color_fondo, foreground=color_rojo, font=("Segoe UI", 10, "bold"))
         
-        # Forzamos el color de fondo institucional libre de grises en marcos y contenedores
-        estilo_ttk.configure("TFrame", background="#f8fafc")
-        estilo_ttk.configure("TLabelframe", background="#f8fafc", bordercolor="#cbd5e1")
-        estilo_ttk.configure("TLabelframe.Label", background="#f8fafc", foreground="#1e293b", font=("Segoe UI", 9, "bold"))
-        
-        # Configuración de botones institucionales
-        estilo_ttk.configure("TButton", padding=(10, 6), relief="flat", background="#b91c1c", borderwidth=0, font=("Segoe UI", 9, "bold"), foreground="#FFFFFF")
-        estilo_ttk.map("TButton", background=[("active", "#991b1b"), ("pressed", "#7f1d1d")])
-
-        estilo_ttk.configure("Accent.TButton", background="#32B855", foreground="#ffffff")
-        estilo_ttk.map("Accent.TButton", background=[("active", "#289e47"), ("pressed", "#1e7835")])
-
-        estilo_ttk.configure("Danger.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Danger.TButton", background=[("active", "#b91c1c"), ("pressed", "#7f1d1d")])
-
-        estilo_ttk.configure("Secondary.TButton", background="#b91c1c", foreground="#ffffff")
-        estilo_ttk.map("Secondary.TButton", background=[("active", "#b91c1c"), ("pressed", "#7f1d1d")])
+        # Botones unificados con profundidad y estética profesional
+        self.estilo_app.configure("TButton", background=color_rojo, foreground="#ffffff", bordercolor=color_rojo, font=("Segoe UI", 9, "bold"))
+        self.estilo_app.map("TButton", 
+            background=[("active", color_rojo_hover), ("pressed", "#7f1d1d")],
+            bordercolor=[("active", color_rojo_hover)]
+        )
 
     def _aplicar_cursor_mano(self, boton):
         """Asigna el cambio de cursor a formato de mano interactiva al pasar por encima."""
@@ -45,91 +44,101 @@ class VistaAsignacionSecciones(ttk.Frame):
         boton.bind("<Leave>", lambda e: self.winfo_toplevel().config(cursor=""))
 
     def _construir_interfaz(self, contenedor):
+        color_fondo = "#F3F3E0"
         contenedor.configure(style="TFrame")
+        contenedor.columnconfigure(0, weight=1)
+        contenedor.rowconfigure(4, weight=1)
 
-        # Encabezado institucional con margen derecho protegido para el logotipo
-        encabezado = ttk.Frame(contenedor, style="TFrame", height=75)
-        encabezado.pack(fill="x", padx=(20, 190), pady=(15, 5))
-        encabezado.pack_propagate(False)
+        # 1. Encabezado simétrico con Grid de 2 columnas (Títulos a la izquierda, Logo a la derecha)
+        marco_encabezado = ttk.Frame(contenedor, padding=(20, 15, 20, 5))
+        marco_encabezado.pack(fill="x")
+        marco_encabezado.columnconfigure(0, weight=1)
+        marco_encabezado.columnconfigure(1, weight=0)
 
-        frame_titulos = ttk.Frame(encabezado, style="TFrame")
-        frame_titulos.place(x=0, y=8)
+        marco_titulos = ttk.Frame(marco_encabezado)
+        marco_titulos.grid(row=0, column=0, sticky="w")
 
-        ttk.Label(
-            frame_titulos, 
+        etiqueta_titulo = tk.Label(
+            marco_titulos, 
             text="Creación y asignación de secciones", 
             font=("Segoe UI", 22, "bold"), 
-            foreground="#A93226",
-            background="#f8fafc"
-        ).pack(anchor="w")
+            fg="#b91c1c",
+            bg=color_fondo
+        )
+        etiqueta_titulo.pack(anchor="w")
 
-        ttk.Label(
-            frame_titulos,
+        etiqueta_subtitulo = tk.Label(
+            marco_titulos,
             text="Panel de Configuración Académica",
-            font=("Segoe UI", 11, "italic"),
-            foreground="#64748b",
-            background="#f8fafc"
-        ).pack(anchor="w", pady=(1, 0))
+            font=("Segoe UI", 10, "italic"),
+            fg="#64748b",
+            bg=color_fondo
+        )
+        etiqueta_subtitulo.pack(anchor="w", pady=(1, 0))
 
-        # Logotipo institucional grande en la esquina superior derecha
+        # Marco flotante protegido para el logotipo institucional
+        marco_logo = ttk.Frame(marco_encabezado, width=110, height=110)
+        marco_logo.grid(row=0, column=1, sticky="e", padx=(10, 0))
+        marco_logo.pack_propagate(False)
+
         try:
             ruta_logo = os.path.join(os.path.dirname(__file__), "logon.png")
             if os.path.exists(ruta_logo):
-                imagen_pil = Image.open(ruta_logo).resize((170, 170), Image.Resampling.LANCZOS)
+                imagen_pil = Image.open(ruta_logo)
+                imagen_pil.thumbnail((100, 100), Image.Resampling.LANCZOS)
                 self.imagen_logo = ImageTk.PhotoImage(imagen_pil)
-                etiqueta_logo = ttk.Label(contenedor, image=self.imagen_logo, style="TLabel", background="#f8fafc")
-                etiqueta_logo.place(relx=0.98, x=0, y=10, anchor="ne")
-                etiqueta_logo.lift()
+                
+                etiqueta_logo = tk.Label(marco_logo, image=self.imagen_logo, bg=color_fondo)
+                etiqueta_logo.pack(expand=True, anchor="center")
         except Exception as error_logo:
             print(f"No se pudo cargar el logo: {error_logo}")
 
-        # Formulario de configuración integrado sin fondos grises
+        # 2. Formulario de configuración integrado con armonía visual
         self.form_config = FormularioConfiguracionAcademica(contenedor)
-        self.form_config.pack(fill="x", padx=(20, 190), pady=10)
+        self.form_config.pack(fill="x", padx=20, pady=8)
 
-        # Panel de botones de acciones
-        accion_botones = ttk.Frame(contenedor, style="TFrame")
-        accion_botones.pack(fill="x", padx=(20, 190), pady=12)
+        # 3. Panel de botones de acciones unificados
+        accion_botones = ttk.Frame(contenedor, padding=(0, 5))
+        accion_botones.pack(fill="x", padx=20, pady=5)
 
         self.btn_crear = ttk.Button(
             accion_botones, 
-            text="Crear Sección", 
-            style="Accent.TButton",
+            text="➕ Crear Sección", 
             command=self._on_crear_seccion_click
         )
-        self.btn_crear.pack(side="left", padx=(0, 8))
+        self.btn_crear.pack(side="left", padx=(0, 6))
         self._aplicar_cursor_mano(self.btn_crear)
 
         self.btn_regresar = ttk.Button(
             accion_botones, 
-            text="← Regresar al Menú", 
-            style="Secondary.TButton",
+            text="← Regresar", 
+            bootstyle="secondary",
             command=self._on_regresar
         )
-        self.btn_regresar.pack(side="left", padx=8)
+        self.btn_regresar.pack(side="left", padx=6)
         self._aplicar_cursor_mano(self.btn_regresar)
 
         self.btn_cerrarsesion = ttk.Button(
             accion_botones,  
             text="Cerrar Sesión",
-            style="Secondary.TButton",
+            bootstyle="secondary",
             command=self._on_cerrar_sesion_click
         )
-        self.btn_cerrarsesion.pack(side="left", padx=8)
+        self.btn_cerrarsesion.pack(side="left", padx=6)
         self._aplicar_cursor_mano(self.btn_cerrarsesion)
 
         self.btn_eliminar = ttk.Button(
             accion_botones, 
-            text="Eliminar Seleccionada", 
-            style="Danger.TButton",
+            text="🗑️ Eliminar Seleccionada", 
+            bootstyle="danger",
             command=self._on_eliminar_click
         )
-        self.btn_eliminar.pack(side="right", padx=(8, 0))
+        self.btn_eliminar.pack(side="right", padx=(6, 0))
         self._aplicar_cursor_mano(self.btn_eliminar)
 
-        # Tabla resumen (Treeview) con diseño limpio adaptado
-        frame_tabla = ttk.LabelFrame(contenedor, text=" Secciones Académicas Activas ", padding=15, style="TLabelframe")
-        frame_tabla.pack(fill="both", expand=True, padx=20, pady=10)
+        # 4. Tabla resumen (Treeview) con diseño limpio y adaptado
+        frame_tabla = ttk.LabelFrame(contenedor, text=" Secciones Académicas Activas ", padding=12)
+        frame_tabla.pack(fill="both", expand=True, padx=20, pady=(5, 15))
 
         columnas = ("periodo", "anio", "seccion", "turno", "aula", "capacidad")
         self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=6)
@@ -193,11 +202,10 @@ class VistaAsignacionSecciones(ttk.Frame):
             self.master.destroy()            
 
 if __name__ == "__main__":
-    root = tk.Tk()  
-    root.title("Gestión Académica 2026 - Asignación de Secciones")
-    root.geometry("820x650")
+    root = ttk.Window(title="Gestión Académica 2026 - Asignación de Secciones", themename="flatly", size=(850, 680))
+    root.configure(bg="#F3F3E0")
     
     app = VistaAsignacionSecciones(contenedor_principal=root, controlador_externo=None)
-    app.pack(fill="both", expand=True)
+    app.pack(fill="both", expand=True, padx=10, pady=10)
         
     root.mainloop()
